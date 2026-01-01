@@ -1,6 +1,8 @@
 package gogpu
 
 import (
+	"image"
+
 	"github.com/gogpu/gogpu/gmath"
 	"github.com/gogpu/gogpu/gpu/types"
 )
@@ -83,4 +85,14 @@ func (c *Context) DrawTriangle(bgR, bgG, bgB, bgA float32) error {
 func (c *Context) DrawTriangleColor(bg gmath.Color) error {
 	err := c.DrawTriangle(bg.R, bg.G, bg.B, bg.A)
 	return err
+}
+
+// NewTextureFromRGBA creates a texture from raw RGBA pixel data.
+func (c *Context) NewTextureFromRGBA(width, height int, data []byte) (*Texture, error) {
+	return c.renderer.NewTextureFromRGBA(width, height, data)
+}
+
+// NewTextureFromImage creates a texture from an image.Image.
+func (c *Context) NewTextureFromImage(img image.Image) (*Texture, error) {
+	return c.renderer.NewTextureFromImage(img)
 }

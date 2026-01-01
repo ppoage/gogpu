@@ -83,11 +83,13 @@ const (
 // RenderPipelineDescriptor describes a render pipeline.
 type RenderPipelineDescriptor struct {
 	Label            string
+	Layout           PipelineLayout
 	VertexShader     ShaderModule
 	VertexEntryPoint string
 	FragmentShader   ShaderModule
 	FragmentEntry    string
 	TargetFormat     TextureFormat
+	VertexBuffers    []VertexBufferLayout
 	Topology         PrimitiveTopology
 	FrontFace        FrontFace
 	CullMode         CullMode

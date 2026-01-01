@@ -121,7 +121,7 @@ func convertCullMode(mode gogputypes.CullMode) types.CullMode {
 
 // convertBufferUsage converts gogpu BufferUsage to wgpu types.BufferUsage.
 // Used by CreateBuffer (not yet fully implemented).
-func convertBufferUsage(usage gogputypes.BufferUsage) types.BufferUsage { //nolint:unused
+func convertBufferUsage(usage gogputypes.BufferUsage) types.BufferUsage {
 	var result types.BufferUsage
 
 	if usage&gogputypes.BufferUsageMapRead != 0 {
@@ -160,7 +160,7 @@ func convertBufferUsage(usage gogputypes.BufferUsage) types.BufferUsage { //noli
 
 // convertIndexFormat converts gogpu IndexFormat to wgpu types.IndexFormat.
 // Used by SetIndexBuffer (not yet fully implemented).
-func convertIndexFormat(format gogputypes.IndexFormat) types.IndexFormat { //nolint:unused
+func convertIndexFormat(format gogputypes.IndexFormat) types.IndexFormat {
 	switch format {
 	case gogputypes.IndexFormatUint16:
 		return types.IndexFormatUint16
@@ -173,7 +173,7 @@ func convertIndexFormat(format gogputypes.IndexFormat) types.IndexFormat { //nol
 
 // convertAddressMode converts gogpu AddressMode to wgpu types.AddressMode.
 // Used by CreateSampler (not yet fully implemented).
-func convertAddressMode(mode gogputypes.AddressMode) types.AddressMode { //nolint:unused
+func convertAddressMode(mode gogputypes.AddressMode) types.AddressMode {
 	switch mode {
 	case gogputypes.AddressModeRepeat:
 		return types.AddressModeRepeat
@@ -188,7 +188,7 @@ func convertAddressMode(mode gogputypes.AddressMode) types.AddressMode { //nolin
 
 // convertFilterMode converts gogpu FilterMode to wgpu types.FilterMode.
 // Used by CreateSampler (not yet fully implemented).
-func convertFilterMode(mode gogputypes.FilterMode) types.FilterMode { //nolint:unused
+func convertFilterMode(mode gogputypes.FilterMode) types.FilterMode {
 	switch mode {
 	case gogputypes.FilterModeNearest:
 		return types.FilterModeNearest
@@ -201,20 +201,20 @@ func convertFilterMode(mode gogputypes.FilterMode) types.FilterMode { //nolint:u
 
 // convertMipmapFilterMode converts gogpu MipmapFilterMode to wgpu types.MipmapFilterMode.
 // Used by CreateSampler (not yet fully implemented).
-func convertMipmapFilterMode(mode gogputypes.MipmapFilterMode) types.MipmapFilterMode { //nolint:unused
+func convertMipmapFilterMode(mode gogputypes.MipmapFilterMode) types.FilterMode {
 	switch mode {
 	case gogputypes.MipmapFilterModeNearest:
-		return types.MipmapFilterModeNearest
+		return types.FilterModeNearest
 	case gogputypes.MipmapFilterModeLinear:
-		return types.MipmapFilterModeLinear
+		return types.FilterModeLinear
 	default:
-		return types.MipmapFilterModeLinear
+		return types.FilterModeLinear
 	}
 }
 
 // convertShaderStage converts gogpu ShaderStage to wgpu types.ShaderStage.
 // Used by CreateBindGroupLayout (not yet fully implemented).
-func convertShaderStage(stage gogputypes.ShaderStage) types.ShaderStage { //nolint:unused
+func convertShaderStage(stage gogputypes.ShaderStage) types.ShaderStage {
 	var result types.ShaderStage
 
 	if stage&gogputypes.ShaderStageVertex != 0 {
@@ -232,7 +232,7 @@ func convertShaderStage(stage gogputypes.ShaderStage) types.ShaderStage { //noli
 
 // convertTextureDimension converts gogpu TextureDimension to wgpu types.TextureDimension.
 // Used by CreateTexture (not yet fully implemented).
-func convertTextureDimension(dim gogputypes.TextureDimension) types.TextureDimension { //nolint:unused
+func convertTextureDimension(dim gogputypes.TextureDimension) types.TextureDimension {
 	switch dim {
 	case gogputypes.TextureDimension1D:
 		return types.TextureDimension1D
@@ -283,7 +283,7 @@ func convertTextureAspect(aspect gogputypes.TextureAspect) types.TextureAspect {
 
 // convertExtent3D converts gogpu Extent3D to hal.Extent3D.
 // Used by WriteTexture (not yet fully implemented).
-func convertExtent3D(extent gogputypes.Extent3D) *hal.Extent3D { //nolint:unused
+func convertExtent3D(extent gogputypes.Extent3D) *hal.Extent3D {
 	return &hal.Extent3D{
 		Width:              extent.Width,
 		Height:             extent.Height,
@@ -293,7 +293,7 @@ func convertExtent3D(extent gogputypes.Extent3D) *hal.Extent3D { //nolint:unused
 
 // convertOrigin3D converts gogpu Origin3D to hal.Origin3D.
 // Used by WriteTexture (not yet fully implemented).
-func convertOrigin3D(origin gogputypes.Origin3D) *hal.Origin3D { //nolint:unused
+func convertOrigin3D(origin gogputypes.Origin3D) *hal.Origin3D {
 	return &hal.Origin3D{
 		X: origin.X,
 		Y: origin.Y,
@@ -303,10 +303,118 @@ func convertOrigin3D(origin gogputypes.Origin3D) *hal.Origin3D { //nolint:unused
 
 // convertImageDataLayout converts gogpu ImageDataLayout to hal.ImageDataLayout.
 // Used by WriteTexture (not yet fully implemented).
-func convertImageDataLayout(layout gogputypes.ImageDataLayout) *hal.ImageDataLayout { //nolint:unused
+func convertImageDataLayout(layout gogputypes.ImageDataLayout) *hal.ImageDataLayout {
 	return &hal.ImageDataLayout{
 		Offset:       layout.Offset,
 		BytesPerRow:  layout.BytesPerRow,
 		RowsPerImage: layout.RowsPerImage,
 	}
+}
+
+func convertBufferBindingType(binding gogputypes.BufferBindingType) types.BufferBindingType {
+	switch binding {
+	case gogputypes.BufferBindingTypeUniform:
+		return types.BufferBindingTypeUniform
+	case gogputypes.BufferBindingTypeStorage:
+		return types.BufferBindingTypeStorage
+	case gogputypes.BufferBindingTypeReadOnlyStorage:
+		return types.BufferBindingTypeReadOnlyStorage
+	default:
+		return types.BufferBindingTypeUndefined
+	}
+}
+
+func convertSamplerBindingType(binding gogputypes.SamplerBindingType) types.SamplerBindingType {
+	switch binding {
+	case gogputypes.SamplerBindingTypeFiltering:
+		return types.SamplerBindingTypeFiltering
+	case gogputypes.SamplerBindingTypeNonFiltering:
+		return types.SamplerBindingTypeNonFiltering
+	case gogputypes.SamplerBindingTypeComparison:
+		return types.SamplerBindingTypeComparison
+	default:
+		return types.SamplerBindingTypeUndefined
+	}
+}
+
+func convertTextureSampleType(sample gogputypes.TextureSampleType) types.TextureSampleType {
+	switch sample {
+	case gogputypes.TextureSampleTypeFloat:
+		return types.TextureSampleTypeFloat
+	case gogputypes.TextureSampleTypeUnfilterableFloat:
+		return types.TextureSampleTypeUnfilterableFloat
+	case gogputypes.TextureSampleTypeDepth:
+		return types.TextureSampleTypeDepth
+	case gogputypes.TextureSampleTypeSint:
+		return types.TextureSampleTypeSint
+	case gogputypes.TextureSampleTypeUint:
+		return types.TextureSampleTypeUint
+	default:
+		return types.TextureSampleTypeFloat
+	}
+}
+
+func convertVertexFormat(format gogputypes.VertexFormat) types.VertexFormat {
+	return types.VertexFormat(format)
+}
+
+func convertVertexStepMode(mode gogputypes.VertexStepMode) types.VertexStepMode {
+	return types.VertexStepMode(mode)
+}
+
+func convertVertexBufferLayouts(layouts []gogputypes.VertexBufferLayout) []types.VertexBufferLayout {
+	if len(layouts) == 0 {
+		return nil
+	}
+	out := make([]types.VertexBufferLayout, 0, len(layouts))
+	for _, layout := range layouts {
+		attributes := make([]types.VertexAttribute, 0, len(layout.Attributes))
+		for _, attr := range layout.Attributes {
+			attributes = append(attributes, types.VertexAttribute{
+				Format:         convertVertexFormat(attr.Format),
+				Offset:         attr.Offset,
+				ShaderLocation: attr.ShaderLocation,
+			})
+		}
+		out = append(out, types.VertexBufferLayout{
+			ArrayStride: layout.ArrayStride,
+			StepMode:    convertVertexStepMode(layout.StepMode),
+			Attributes:  attributes,
+		})
+	}
+	return out
+}
+
+func convertBindGroupLayoutEntries(entries []gogputypes.BindGroupLayoutEntry) []types.BindGroupLayoutEntry {
+	if len(entries) == 0 {
+		return nil
+	}
+	out := make([]types.BindGroupLayoutEntry, 0, len(entries))
+	for _, entry := range entries {
+		converted := types.BindGroupLayoutEntry{
+			Binding:    entry.Binding,
+			Visibility: types.ShaderStages(convertShaderStage(entry.Visibility)),
+		}
+		if entry.Buffer != nil {
+			converted.Buffer = &types.BufferBindingLayout{
+				Type:             convertBufferBindingType(entry.Buffer.Type),
+				HasDynamicOffset: entry.Buffer.HasDynamicOffset,
+				MinBindingSize:   entry.Buffer.MinBindingSize,
+			}
+		}
+		if entry.Sampler != nil {
+			converted.Sampler = &types.SamplerBindingLayout{
+				Type: convertSamplerBindingType(entry.Sampler.Type),
+			}
+		}
+		if entry.Texture != nil {
+			converted.Texture = &types.TextureBindingLayout{
+				SampleType:    convertTextureSampleType(entry.Texture.SampleType),
+				ViewDimension: convertTextureViewDimension(entry.Texture.ViewDimension),
+				Multisampled:  entry.Texture.Multisampled,
+			}
+		}
+		out = append(out, converted)
+	}
+	return out
 }

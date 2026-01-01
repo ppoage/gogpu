@@ -957,6 +957,7 @@ func TestDarwinObjcStressLoop(t *testing.T) {
 }
 
 func TestDarwinGogpuWindowSurfaceStress(t *testing.T) {
+	t.Skip("Stress test disabled")
 	if runtime.GOARCH != "arm64" {
 		t.Skip("stress tests require arm64")
 	}

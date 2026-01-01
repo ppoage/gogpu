@@ -20,4 +20,5 @@ docs/dev/
 .gode/
 
 tmp/
+.gocache/
 .DS_Store
