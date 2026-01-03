@@ -120,9 +120,14 @@ func TestNativeBackendInterfaceDarwin(t *testing.T) {
 			backend.ReleaseTexture(surfTex.Texture)
 		}()
 
+		if err := writeTextureCases(backend, device, queue); err != nil {
+			return err
+		}
+
+		sampleSize := types.Extent3D{Width: 64, Height: 64, DepthOrArrayLayers: 1}
 		texture, err := backend.CreateTexture(device, &types.TextureDescriptor{
 			Label:         "sample-texture",
-			Size:          types.Extent3D{Width: 1, Height: 1, DepthOrArrayLayers: 1},
+			Size:          sampleSize,
 			MipLevelCount: 1,
 			SampleCount:   1,
 			Dimension:     types.TextureDimension2D,
@@ -154,8 +159,15 @@ func TestNativeBackendInterfaceDarwin(t *testing.T) {
 			backend.ReleaseTexture(texture)
 		}()
 
-		textureData := make([]byte, 256)
-		copy(textureData, []byte{0xff, 0xff, 0xff, 0xff})
+		sampleBPP, ok := bytesPerPixel(types.TextureFormatRGBA8Unorm)
+		if !ok {
+			return fmt.Errorf("bytesPerPixel missing for RGBA8Unorm")
+		}
+		sampleRowBytes := alignTo256(sampleSize.Width * sampleBPP)
+		textureData := make([]byte, int(sampleRowBytes*sampleSize.Height))
+		for i := range textureData {
+			textureData[i] = byte((i*31 + 17) & 0xFF)
+		}
 		backend.WriteTexture(queue, &types.ImageCopyTexture{
 			Texture:  texture,
 			MipLevel: 0,
@@ -163,9 +175,9 @@ func TestNativeBackendInterfaceDarwin(t *testing.T) {
 			Aspect:   types.TextureAspectAll,
 		}, textureData, &types.ImageDataLayout{
 			Offset:       0,
-			BytesPerRow:  256,
-			RowsPerImage: 1,
-		}, &types.Extent3D{Width: 1, Height: 1, DepthOrArrayLayers: 1})
+			BytesPerRow:  sampleRowBytes,
+			RowsPerImage: sampleSize.Height,
+		}, &sampleSize)
 
 		uniformData := f32Bytes(1.0, 1.0, 1.0, 1.0)
 		uniformBuffer, err := backend.CreateBuffer(device, &types.BufferDescriptor{
@@ -402,6 +414,103 @@ func u16Bytes(values ...uint16) []byte {
 		binary.LittleEndian.PutUint16(out[i*2:], value)
 	}
 	return out
+}
+
+func alignTo256(value uint32) uint32 {
+	if value == 0 {
+		return 0
+	}
+	const alignment = 256
+	return (value + alignment - 1) &^ (alignment - 1)
+}
+
+func bytesPerPixel(format types.TextureFormat) (uint32, bool) {
+	switch format {
+	case types.TextureFormatRGBA8Unorm, types.TextureFormatBGRA8Unorm:
+		return 4, true
+	default:
+		return 0, false
+	}
+}
+
+func writeTextureCases(backend gpu.Backend, device types.Device, queue types.Queue) error {
+	type textureCase struct {
+		label       string
+		format      types.TextureFormat
+		size        types.Extent3D
+		bytesPerRow uint32
+	}
+
+	cases := []textureCase{
+		{
+			label:  "rgba8-128x64",
+			format: types.TextureFormatRGBA8Unorm,
+			size:   types.Extent3D{Width: 128, Height: 64, DepthOrArrayLayers: 1},
+		},
+		{
+			label:       "rgba8-65x32-padded",
+			format:      types.TextureFormatRGBA8Unorm,
+			size:        types.Extent3D{Width: 65, Height: 32, DepthOrArrayLayers: 1},
+			bytesPerRow: 1024,
+		},
+		{
+			label:  "bgra8-320x8",
+			format: types.TextureFormatBGRA8Unorm,
+			size:   types.Extent3D{Width: 320, Height: 8, DepthOrArrayLayers: 1},
+		},
+		{
+			label:  "bgra8-96x48",
+			format: types.TextureFormatBGRA8Unorm,
+			size:   types.Extent3D{Width: 96, Height: 48, DepthOrArrayLayers: 1},
+		},
+	}
+
+	for _, tc := range cases {
+		bpp, ok := bytesPerPixel(tc.format)
+		if !ok {
+			return fmt.Errorf("bytesPerPixel missing for %v", tc.format)
+		}
+		rowBytes := tc.size.Width * bpp
+		bytesPerRow := tc.bytesPerRow
+		if bytesPerRow == 0 {
+			bytesPerRow = alignTo256(rowBytes)
+		}
+		if bytesPerRow < rowBytes || (bytesPerRow%256) != 0 {
+			return fmt.Errorf("invalid bytesPerRow %d for %s (rowBytes=%d)", bytesPerRow, tc.label, rowBytes)
+		}
+
+		texture, err := backend.CreateTexture(device, &types.TextureDescriptor{
+			Label:         "write-" + tc.label,
+			Size:          tc.size,
+			MipLevelCount: 1,
+			SampleCount:   1,
+			Dimension:     types.TextureDimension2D,
+			Format:        tc.format,
+			Usage:         types.TextureUsageCopyDst,
+		})
+		if err != nil {
+			return fmt.Errorf("CreateTexture(%s) failed: %w", tc.label, err)
+		}
+
+		data := make([]byte, int(bytesPerRow*tc.size.Height))
+		for i := range data {
+			data[i] = byte((i*13 + 7) & 0xFF)
+		}
+
+		backend.WriteTexture(queue, &types.ImageCopyTexture{
+			Texture:  texture,
+			MipLevel: 0,
+			Origin:   types.Origin3D{},
+			Aspect:   types.TextureAspectAll,
+		}, data, &types.ImageDataLayout{
+			Offset:       0,
+			BytesPerRow:  bytesPerRow,
+			RowsPerImage: tc.size.Height,
+		}, &tc.size)
+
+		backend.ReleaseTexture(texture)
+	}
+	return nil
 }
 
 var mainThread = make(chan func())
