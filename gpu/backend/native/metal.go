@@ -681,18 +681,42 @@ func (b *Backend) CreateBindGroup(device types.Device, desc *types.BindGroupDesc
 		var resource wgputypes.BindingResource
 		switch {
 		case entry.Buffer != 0:
+			buf, err := b.registry.GetBuffer(entry.Buffer)
+			if err != nil {
+				return 0, err
+			}
+			mtlBuf, ok := buf.(*metal.Buffer)
+			if !ok || mtlBuf == nil {
+				return 0, fmt.Errorf("native: buffer handle %d is not a Metal buffer", entry.Buffer)
+			}
 			resource = wgputypes.BufferBinding{
-				Buffer: wgputypes.BufferHandle(entry.Buffer),
+				Buffer: wgputypes.BufferHandle(mtlBuf.Raw()),
 				Offset: entry.Offset,
 				Size:   entry.Size,
 			}
 		case entry.Sampler != 0:
+			sampler, err := b.registry.GetSampler(entry.Sampler)
+			if err != nil {
+				return 0, err
+			}
+			mtlSampler, ok := sampler.(*metal.Sampler)
+			if !ok || mtlSampler == nil {
+				return 0, fmt.Errorf("native: sampler handle %d is not a Metal sampler", entry.Sampler)
+			}
 			resource = wgputypes.SamplerBinding{
-				Sampler: wgputypes.SamplerHandle(entry.Sampler),
+				Sampler: wgputypes.SamplerHandle(mtlSampler.Raw()),
 			}
 		case entry.TextureView != 0:
+			view, err := b.registry.GetTextureView(entry.TextureView)
+			if err != nil {
+				return 0, err
+			}
+			mtlView, ok := view.(*metal.TextureView)
+			if !ok || mtlView == nil {
+				return 0, fmt.Errorf("native: texture view handle %d is not a Metal texture view", entry.TextureView)
+			}
 			resource = wgputypes.TextureViewBinding{
-				TextureView: wgputypes.TextureViewHandle(entry.TextureView),
+				TextureView: wgputypes.TextureViewHandle(mtlView.Raw()),
 			}
 		default:
 			return 0, fmt.Errorf("native: bind group entry %d has no resource", entry.Binding)
